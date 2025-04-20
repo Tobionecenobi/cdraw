@@ -129,7 +129,3 @@
 - [x] Optional: create `.h` only version for header-only usage
 
 ---
-
-## 🎉 All tasks completed!
-
-The cross-platform drawing engine is now complete and working on both Windows and Linux platforms. All examples are running successfully.
