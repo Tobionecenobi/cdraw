@@ -163,6 +163,11 @@ void rect(int x, int y, int w, int h) {
     }
 }
 
+// Draw a square
+void square(int x, int y, int size) {
+    rect(x, y, size, size);
+}
+
 // Draw an ellipse using the midpoint ellipse algorithm
 void ellipse(int x, int y, int w, int h) {
     // Calculate ellipse parameters
@@ -266,6 +271,11 @@ void ellipse(int x, int y, int w, int h) {
         }
     }
 }
+
+//Draw a circle using the ellipse algorithm
+void circle(int x, int y, int r) {
+    ellipse(x, y, r, r);
+}	
 
 // Helper function to sort three points by y-coordinate
 static void _sort_points_by_y(int* x1, int* y1, int* x2, int* y2, int* x3, int* y3) {

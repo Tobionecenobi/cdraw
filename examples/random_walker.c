@@ -9,6 +9,9 @@
 // Walker position
 int walkerX, walkerY;
 
+// Walker step size
+int stepSize = 20;
+
 void setup() {
     printf("Walker setup called\n");
 
@@ -33,23 +36,23 @@ void draw() {
     stroke(255, 255, 255);
 
     // Draw the current position
-    point(walkerX, walkerY);
+    circle(walkerX, walkerY, 20);
 
     // Randomly move the walker
     int choice = (int)randomf(0, 4);
 
     switch (choice) {
         case 0: // Up
-            walkerY--;
+            walkerY -= stepSize;
             break;
         case 1: // Right
-            walkerX++;
+            walkerX += stepSize;
             break;
         case 2: // Down
-            walkerY++;
+            walkerY += stepSize;
             break;
         case 3: // Left
-            walkerX--;
+            walkerX -= stepSize;
             break;
     }
 

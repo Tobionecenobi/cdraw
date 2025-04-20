@@ -48,7 +48,9 @@ int run(void);
 void point(int x, int y);
 void line(int x1, int y1, int x2, int y2);
 void rect(int x, int y, int w, int h);
+void square(int x, int y, int size);
 void ellipse(int x, int y, int w, int h);
+void circle(int x, int y, int r);
 void triangle(int x1, int y1, int x2, int y2, int x3, int y3);
 
 // Color functions
