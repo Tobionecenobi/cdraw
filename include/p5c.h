@@ -19,6 +19,12 @@
     #error "Unsupported platform"
 #endif
 
+// Special key codes
+#define ARROW_UP    0x26
+#define ARROW_DOWN  0x28
+#define ARROW_LEFT  0x25
+#define ARROW_RIGHT 0x27
+
 // Basic types
 typedef struct {
     uint8_t r, g, b;

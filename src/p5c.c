@@ -30,8 +30,11 @@ int mousePressed = 0;
 char key = 0;
 int keyPressed = 0;
 
-// Key state array (ASCII values 0-255)
+// Key state arrays
+// Regular keys (ASCII values 0-255)
 static int keyStates[256] = {0};
+// Special keys (arrow keys, etc.)
+static int specialKeyStates[256] = {0};
 
 // Internal state
 static uint32_t* framebuffer = NULL;
@@ -275,7 +278,7 @@ void ellipse(int x, int y, int w, int h) {
 //Draw a circle using the ellipse algorithm
 void circle(int x, int y, int r) {
     ellipse(x, y, r, r);
-}	
+}
 
 // Helper function to sort three points by y-coordinate
 static void _sort_points_by_y(int* x1, int* y1, int* x2, int* y2, int* x3, int* y3) {
@@ -419,7 +422,12 @@ float map(float value, float start1, float stop1, float start2, float stop2) {
 
 // Check if a key is currently pressed
 int keyIsDown(char k) {
-    // Convert to unsigned char to ensure positive index
+    // For special keys (arrow keys, etc.)
+    if (k == ARROW_UP || k == ARROW_DOWN || k == ARROW_LEFT || k == ARROW_RIGHT) {
+        return specialKeyStates[(unsigned char)k];
+    }
+
+    // For regular ASCII keys
     unsigned char index = (unsigned char)k;
     return keyStates[index];
 }
@@ -463,13 +471,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             mousePressed = 0;
             return 0;
         case WM_KEYDOWN:
-            key = (char)wParam;
             keyPressed = 1;
-            keyStates[(unsigned char)key] = 1;
+            // Check for special keys (arrow keys)
+            if (wParam == VK_UP || wParam == VK_DOWN || wParam == VK_LEFT || wParam == VK_RIGHT) {
+                // Map Windows virtual key codes to our arrow key constants
+                if (wParam == VK_UP) specialKeyStates[ARROW_UP] = 1;
+                if (wParam == VK_DOWN) specialKeyStates[ARROW_DOWN] = 1;
+                if (wParam == VK_LEFT) specialKeyStates[ARROW_LEFT] = 1;
+                if (wParam == VK_RIGHT) specialKeyStates[ARROW_RIGHT] = 1;
+            } else {
+                // Regular ASCII key
+                key = (char)wParam;
+                keyStates[(unsigned char)key] = 1;
+            }
             return 0;
         case WM_KEYUP:
             keyPressed = 0;
-            keyStates[(unsigned char)key] = 0;
+            // Check for special keys (arrow keys)
+            if (wParam == VK_UP || wParam == VK_DOWN || wParam == VK_LEFT || wParam == VK_RIGHT) {
+                // Map Windows virtual key codes to our arrow key constants
+                if (wParam == VK_UP) specialKeyStates[ARROW_UP] = 0;
+                if (wParam == VK_DOWN) specialKeyStates[ARROW_DOWN] = 0;
+                if (wParam == VK_LEFT) specialKeyStates[ARROW_LEFT] = 0;
+                if (wParam == VK_RIGHT) specialKeyStates[ARROW_RIGHT] = 0;
+            } else {
+                // Regular ASCII key - use the key that was released (wParam), not the last pressed key
+                keyStates[(unsigned char)wParam] = 0;
+            }
             return 0;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -700,12 +728,41 @@ int run(void) {
                     break;
                 case KeyPress:
                     keyPressed = 1;
-                    key = XLookupKeysym(&event.xkey, 0) & 0xFF;
-                    keyStates[(unsigned char)key] = 1;
+                    {
+                        KeySym keysym = XLookupKeysym(&event.xkey, 0);
+
+                        // Check for special keys (arrow keys)
+                        if (keysym == XK_Up || keysym == XK_Down || keysym == XK_Left || keysym == XK_Right) {
+                            // Map X11 keysyms to our arrow key constants
+                            if (keysym == XK_Up) specialKeyStates[ARROW_UP] = 1;
+                            if (keysym == XK_Down) specialKeyStates[ARROW_DOWN] = 1;
+                            if (keysym == XK_Left) specialKeyStates[ARROW_LEFT] = 1;
+                            if (keysym == XK_Right) specialKeyStates[ARROW_RIGHT] = 1;
+                        } else {
+                            // Regular ASCII key
+                            key = keysym & 0xFF;
+                            keyStates[(unsigned char)key] = 1;
+                        }
+                    }
                     break;
                 case KeyRelease:
                     keyPressed = 0;
-                    keyStates[(unsigned char)key] = 0;
+                    {
+                        KeySym keysym = XLookupKeysym(&event.xkey, 0);
+
+                        // Check for special keys (arrow keys)
+                        if (keysym == XK_Up || keysym == XK_Down || keysym == XK_Left || keysym == XK_Right) {
+                            // Map X11 keysyms to our arrow key constants
+                            if (keysym == XK_Up) specialKeyStates[ARROW_UP] = 0;
+                            if (keysym == XK_Down) specialKeyStates[ARROW_DOWN] = 0;
+                            if (keysym == XK_Left) specialKeyStates[ARROW_LEFT] = 0;
+                            if (keysym == XK_Right) specialKeyStates[ARROW_RIGHT] = 0;
+                        } else {
+                            // Regular ASCII key - use the key that was released (keysym), not the last pressed key
+                            unsigned char released_key = keysym & 0xFF;
+                            keyStates[released_key] = 0;
+                        }
+                    }
                     break;
             }
         }
