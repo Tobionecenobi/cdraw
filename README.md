@@ -173,7 +173,13 @@ build\main.exe
 - `void circle(int x, int y, int r)` - Draw an circle (not in header only)
 - `void triangle(int x1, int y1, int x2, int y2, int x3, int y3)` - Draw a triangle
 - `void arc(...)` - Draw an arc (BETA, not in header only)
-  
+
+### Transform Functions
+- `void translate(float x, float y)` - Move the coordinate system origin
+- `void push()` - Save the current transform state
+- `void pop()` - Restore the previous transform state
+- `void resetMatrix()` - Reset transforms to default state
+
 ### Color Control
 - `void fill(uint8_t r, uint8_t g, uint8_t b)` - Set the fill color
 - `void stroke(uint8_t r, uint8_t g, uint8_t b)` - Set the stroke color
