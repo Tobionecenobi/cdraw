@@ -8,6 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <string.h> // for memcpy
 
 // Define M_PI if not already defined
 #ifndef M_PI
@@ -50,6 +51,16 @@ static int useStroke = 1;
 static int targetFrameRate = 60;
 static int currentAngleMode = RADIANS; // Default to radians
 
+#define MAX_MATRIX_STACK 32
+
+typedef struct {
+    float m[3][3]; // 3x3 matrix for 2D transformations
+} Matrix;
+
+static Matrix currentMatrix;
+static Matrix matrixStack[MAX_MATRIX_STACK];
+static int matrixStackSize = 0;
+
 // Function pointers for user-defined functions
 static void (*_setup)(void) = NULL;
 static void (*_draw)(void) = NULL;
@@ -74,6 +85,8 @@ static void _init_framebuffer(void);
 static void _render_framebuffer(void);
 static void _clear_framebuffer(uint8_t r, uint8_t g, uint8_t b);
 static void _set_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b);
+static void _init_matrix(Matrix* m);
+static void _transform_point(float* x, float* y);
 
 // Initialize the library
 void size(int w, int h) {
@@ -508,6 +521,17 @@ static void _clear_framebuffer(uint8_t r, uint8_t g, uint8_t b) {
 // Set a pixel in the framebuffer
 static void _set_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
     if (!framebuffer) return;
+
+    // Transform the point
+    float fx = (float)x;
+    float fy = (float)y;
+    _transform_point(&fx, &fy);
+
+    // Convert back to integers
+    x = (int)(fx + 0.5f);
+    y = (int)(fy + 0.5f);
+
+    // Bounds checking
     if (x < 0 || x >= width || y < 0 || y >= height) return;
 
     uint32_t color = (0xFF << 24) | (r << 16) | (g << 8) | b;
@@ -552,6 +576,49 @@ void angleMode(int mode) {
     if (mode == RADIANS || mode == DEGREES) {
         currentAngleMode = mode;
     }
+}
+
+// Matrix functions
+static void _init_matrix(Matrix* m) {
+    // Initialize to identity matrix
+    memset(m->m, 0, sizeof(m->m));
+    m->m[0][0] = 1.0f;
+    m->m[1][1] = 1.0f;
+    m->m[2][2] = 1.0f;
+}
+
+static void _transform_point(float* x, float* y) {
+    float tx = *x * currentMatrix.m[0][0] + *y * currentMatrix.m[0][1] + currentMatrix.m[0][2];
+    float ty = *x * currentMatrix.m[1][0] + *y * currentMatrix.m[1][1] + currentMatrix.m[1][2];
+    *x = tx;
+    *y = ty;
+}
+
+void resetMatrix(void) {
+    _init_matrix(&currentMatrix);
+}
+
+void push(void) {
+    if (matrixStackSize >= MAX_MATRIX_STACK) {
+        fprintf(stderr, "Error: Matrix stack overflow\n");
+        return;
+    }
+    memcpy(&matrixStack[matrixStackSize], &currentMatrix, sizeof(Matrix));
+    matrixStackSize++;
+}
+
+void pop(void) {
+    if (matrixStackSize <= 0) {
+        fprintf(stderr, "Error: Matrix stack underflow\n");
+        return;
+    }
+    matrixStackSize--;
+    memcpy(&currentMatrix, &matrixStack[matrixStackSize], sizeof(Matrix));
+}
+
+void translate(float x, float y) {
+    currentMatrix.m[0][2] += x * currentMatrix.m[0][0] + y * currentMatrix.m[0][1];
+    currentMatrix.m[1][2] += x * currentMatrix.m[1][0] + y * currentMatrix.m[1][1];
 }
 
 // Platform-specific window creation and main loop
@@ -664,6 +731,9 @@ int run(void) {
 
     // Initialize framebuffer
     _init_framebuffer();
+
+    // Initialize matrix
+    resetMatrix();
 
     // Call user setup function
     if (_setup) {
@@ -781,6 +851,9 @@ int run(void) {
 
     // Initialize framebuffer
     _init_framebuffer();
+
+    // Initialize matrix
+    resetMatrix();
 
     // Create XImage
     ximage = XCreateImage(display, visual, depth, ZPixmap, 0,

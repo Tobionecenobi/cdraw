@@ -65,7 +65,7 @@ void draw() {
 
     // Draw a rectangle that follows the mouse
     fill(0, 255, 0);
-    rect(mouseX - 25, mouseY - 25, 50, 50);
+    square(mouseX - 25, mouseY - 25, 50);
 
     // Draw a line from the circle to the mouse
     stroke(255, 255, 0);

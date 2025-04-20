@@ -71,6 +71,12 @@ void arc(int x, int y, int w, int h, float start, float stop);
 void arcMode(int x, int y, int w, int h, float start, float stop, int mode);
 void arcDetail(int x, int y, int w, int h, float start, float stop, int mode, int detail);
 
+// Transform functions
+void translate(float x, float y);
+void push(void);
+void pop(void);
+void resetMatrix(void);
+
 // Color functions
 void fill(uint8_t r, uint8_t g, uint8_t b);
 void stroke(uint8_t r, uint8_t g, uint8_t b);
