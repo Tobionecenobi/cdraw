@@ -9,6 +9,11 @@
 #include <time.h>
 #include <math.h>
 
+// Define M_PI if not already defined
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // Platform-specific includes
 #ifdef P5C_WINDOWS
     #include <windows.h>
@@ -43,6 +48,7 @@ static Color strokeColor = {0, 0, 0};
 static int useFill = 1;
 static int useStroke = 1;
 static int targetFrameRate = 60;
+static int currentAngleMode = RADIANS; // Default to radians
 
 // Function pointers for user-defined functions
 static void (*_setup)(void) = NULL;
@@ -280,6 +286,99 @@ void circle(int x, int y, int r) {
     ellipse(x, y, r, r);
 }
 
+// Helper function to convert angles based on current angle mode
+static float _normalize_angle(float angle) {
+    if (currentAngleMode == DEGREES) {
+        return angle * M_PI / 180.0f;
+    }
+    return angle;
+}
+
+void arcDetail(int x, int y, int w, int h, float start, float stop, int mode, int detail) {
+    if (w <= 0 || h <= 0) return;
+
+    int a = w / 2;
+    int b = h / 2;
+    int cx = x + a;
+    int cy = y + b;
+
+    float startAngle = _normalize_angle(start);
+    float stopAngle = _normalize_angle(stop);
+    if (stopAngle < startAngle) stopAngle += 2 * M_PI;
+
+    if (detail <= 0) detail = 25;
+    if (detail > 360) detail = 360;
+
+    float angleStep = (stopAngle - startAngle) / detail;
+    int px[362];
+    int py[362];
+    int count = 0;
+
+    for (int i = 0; i <= detail; i++) {
+        float angle = startAngle + i * angleStep;
+        px[count] = cx + (int)(a * cosf(angle));
+        py[count] = cy + (int)(b * sinf(angle));
+        count++;
+    }
+
+    // --- FILL ---
+    if (useFill) {
+        if (mode == PIE) {
+            for (int i = 0; i < count - 1; i++) {
+                triangle(cx, cy, px[i], py[i], px[i + 1], py[i + 1]);
+            }
+        }
+        else if (mode == CHORD) {
+            // Build a filled polygon strip between arc points and closing chord
+            for (int i = 0; i < count - 2; i++) {
+                triangle(px[i], py[i], px[i + 1], py[i + 1], px[i + 2], py[i + 2]);
+            }
+        }
+        else { // OPEN
+            // Fill the arc segment by vertical scanlines inside bounding ellipse
+            for (int sy = -b; sy <= b; sy++) {
+                float ry = (float)(sy) / b;
+                float dx = a * sqrtf(fmaxf(0.0f, 1.0f - ry * ry));
+                int xStart = (int)(-dx);
+                int xEnd = (int)(dx);
+
+                for (int sx = xStart; sx <= xEnd; sx++) {
+                    float angle = atan2f((float)sy, (float)sx);
+                    if (angle < 0) angle += 2 * M_PI;
+
+                    if (angle >= startAngle && angle <= stopAngle) {
+                        _set_pixel(cx + sx, cy + sy, fillColor.r, fillColor.g, fillColor.b);
+                    }
+                }
+            }
+        }
+    }
+
+    // --- STROKE ---
+    if (useStroke) {
+        for (int i = 0; i < count - 1; i++) {
+            line(px[i], py[i], px[i + 1], py[i + 1]);
+        }
+
+        if (mode == CHORD) {
+            line(px[0], py[0], px[count - 1], py[count - 1]);
+        } else if (mode == PIE) {
+            line(cx, cy, px[0], py[0]);
+            line(cx, cy, px[count - 1], py[count - 1]);
+        }
+    }
+}
+
+
+// Shorthand wrappers
+void arc(int x, int y, int w, int h, float start, float stop) {
+    arcDetail(x, y, w, h, start, stop, OPEN, 25);
+}
+
+void arcMode(int x, int y, int w, int h, float start, float stop, int mode) {
+    arcDetail(x, y, w, h, start, stop, mode, 25);
+}
+
 // Helper function to sort three points by y-coordinate
 static void _sort_points_by_y(int* x1, int* y1, int* x2, int* y2, int* x3, int* y3) {
     // Sort the points by y-coordinate (bubble sort)
@@ -446,6 +545,13 @@ float dist(float x1, float y1, float x2, float y2) {
     float dx = x2 - x1;
     float dy = y2 - y1;
     return sqrt(dx * dx + dy * dy);
+}
+
+// Set the angle mode (RADIANS or DEGREES)
+void angleMode(int mode) {
+    if (mode == RADIANS || mode == DEGREES) {
+        currentAngleMode = mode;
+    }
 }
 
 // Platform-specific window creation and main loop

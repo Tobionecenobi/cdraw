@@ -25,6 +25,15 @@
 #define ARROW_LEFT  0x25
 #define ARROW_RIGHT 0x27
 
+// Angle modes
+#define RADIANS     0
+#define DEGREES     1
+
+// Arc modes
+#define OPEN        0
+#define CHORD       1
+#define PIE         2
+
 // Basic types
 typedef struct {
     uint8_t r, g, b;
@@ -58,6 +67,9 @@ void square(int x, int y, int size);
 void ellipse(int x, int y, int w, int h);
 void circle(int x, int y, int r);
 void triangle(int x1, int y1, int x2, int y2, int x3, int y3);
+void arc(int x, int y, int w, int h, float start, float stop);
+void arcMode(int x, int y, int w, int h, float start, float stop, int mode);
+void arcDetail(int x, int y, int w, int h, float start, float stop, int mode, int detail);
 
 // Color functions
 void fill(uint8_t r, uint8_t g, uint8_t b);
@@ -70,6 +82,7 @@ float map(float value, float start1, float stop1, float start2, float stop2);
 float randomf(float min, float max);  // Renamed to avoid conflict with stdlib
 float constrain(float value, float min, float max);
 float dist(float x1, float y1, float x2, float y2);
+void angleMode(int mode);
 
 // Input functions
 int keyIsDown(char k);
