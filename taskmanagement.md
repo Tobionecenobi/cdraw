@@ -47,8 +47,11 @@
 - [x] `void point(int x, int y)`
 - [x] `void line(int x1, int y1, int x2, int y2)` — use Bresenham's line algorithm
 - [x] `void rect(int x, int y, int w, int h)`
+- [x] `void square(int x, int y, int size)`
 - [x] `void ellipse(int x, int y, int w, int h)` — use midpoint ellipse algorithm
+- [x] `void circle(int x, int y, int r)`
 - [x] `void triangle(int x1, int y1, int x2, int y2, int x3, int y3)` — draw filled triangle or outline
+- [x] `void arc(int x, int y, int w, int h, float start, float stop)`
 
 ---
 
