@@ -168,9 +168,12 @@ build\main.exe
 - `void point(int x, int y)` - Draw a point
 - `void line(int x1, int y1, int x2, int y2)` - Draw a line
 - `void rect(int x, int y, int w, int h)` - Draw a rectangle
+- `void square(int x, int y, int size)` - Draw a square (not in header only)
 - `void ellipse(int x, int y, int w, int h)` - Draw an ellipse
+- `void circle(int x, int y, int radius)` - Draw an ellipse (not in header only)
 - `void triangle(int x1, int y1, int x2, int y2, int x3, int y3)` - Draw a triangle
-
+- `void arc(...)` - Draw an arc (BETA, not in header only)
+  
 ### Color Control
 - `void fill(uint8_t r, uint8_t g, uint8_t b)` - Set the fill color
 - `void stroke(uint8_t r, uint8_t g, uint8_t b)` - Set the stroke color
