@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+
+// Define CLOCK_MONOTONIC if not available
+#ifndef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC 1
+#endif
 #include <math.h>
 #include <string.h> // for memcpy
 
@@ -510,12 +515,15 @@ static void _init_framebuffer(void) {
 
 // Clear the framebuffer with a specific color
 static void _clear_framebuffer(uint8_t r, uint8_t g, uint8_t b) {
+    printf("Clearing framebuffer with color (%d, %d, %d)\n", r, g, b);
     if (!framebuffer) return;
 
     uint32_t color = (0xFF << 24) | (r << 16) | (g << 8) | b;
+    printf("Framebuffer size: %d\n", width * height);
     for (int i = 0; i < width * height; i++) {
         framebuffer[i] = color;
     }
+    printf("Framebuffer cleared\n");
 }
 
 // Set a pixel in the framebuffer
@@ -687,6 +695,11 @@ int run(void) {
 
     // Initialize random seed
     srand((unsigned int)time(NULL));
+    
+    // Call user setup function
+    if (_setup) {
+        _setup();
+    }
 
     // Register window class
     WNDCLASS wc = {0};
@@ -735,10 +748,6 @@ int run(void) {
     // Initialize matrix
     resetMatrix();
 
-    // Call user setup function
-    if (_setup) {
-        _setup();
-    }
 
     // Main loop
     MSG msg;
@@ -806,10 +815,15 @@ static void _render_framebuffer(void) {
 int run(void) {
     _setup = setup;
     _draw = draw;
-
+    
     // Initialize random seed
     srand((unsigned int)time(NULL));
-
+    
+    // Call user setup function
+    if (_setup) {
+        _setup();
+    }
+    
     // Open display
     display = XOpenDisplay(NULL);
     if (!display) {
@@ -866,10 +880,6 @@ int run(void) {
         return 1;
     }
 
-    // Call user setup function
-    if (_setup) {
-        _setup();
-    }
 
     // Main loop
     XEvent event;
