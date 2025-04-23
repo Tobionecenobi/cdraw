@@ -56,6 +56,9 @@ static int useStroke = 1;
 static int targetFrameRate = 60;
 static int currentAngleMode = RADIANS; // Default to radians
 
+// Add a global variable for stroke weight
+static int strokeWeightValue = 1; // Default stroke weight is 1
+
 #define MAX_MATRIX_STACK 32
 
 typedef struct {
@@ -135,14 +138,26 @@ void noStroke(void) {
     useStroke = 0;
 }
 
-// Draw a single point
-void point(int x, int y) {
-    if (useStroke) {
-        _set_pixel(x, y, strokeColor.r, strokeColor.g, strokeColor.b);
+// Function to set stroke weight
+void strokeWeight(int weight) {
+    if (weight > 0) {
+        strokeWeightValue = weight;
     }
 }
 
-// Draw a line using Bresenham's algorithm
+// Modify the point function to account for stroke weight
+void point(int x, int y) {
+    if (useStroke) {
+        int halfWeight = strokeWeightValue / 2;
+        for (int dx = -halfWeight; dx <= halfWeight; dx++) {
+            for (int dy = -halfWeight; dy <= halfWeight; dy++) {
+                _set_pixel(x + dx, y + dy, strokeColor.r, strokeColor.g, strokeColor.b);
+            }
+        }
+    }
+}
+
+// Modify the line function to account for stroke weight
 void line(int x1, int y1, int x2, int y2) {
     if (!useStroke) return;
 
@@ -153,8 +168,17 @@ void line(int x1, int y1, int x2, int y2) {
     int err = dx - dy;
     int e2;
 
+    int halfWeight = strokeWeightValue / 2;
+
     while (1) {
-        _set_pixel(x1, y1, strokeColor.r, strokeColor.g, strokeColor.b);
+        // Draw a thicker line by adding perpendicular offsets
+        for (int offset = -halfWeight; offset <= halfWeight; offset++) {
+            if (dx > dy) {
+                _set_pixel(x1, y1 + offset, strokeColor.r, strokeColor.g, strokeColor.b);
+            } else {
+                _set_pixel(x1 + offset, y1, strokeColor.r, strokeColor.g, strokeColor.b);
+            }
+        }
 
         if (x1 == x2 && y1 == y2) break;
 

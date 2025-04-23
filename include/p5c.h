@@ -93,4 +93,7 @@ void angleMode(int mode);
 // Input functions
 int keyIsDown(char k);
 
+// Add the strokeWeight function declaration
+void strokeWeight(int weight);
+
 #endif /* P5C_H */
