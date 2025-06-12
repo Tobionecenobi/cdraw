@@ -194,27 +194,40 @@ void line(int x1, int y1, int x2, int y2) {
     }
 }
 
-// Draw a rectangle
-void rect(int x, int y, int w, int h) {
-    // Fill the rectangle if fill is enabled
-    if (useFill) {
-        for (int j = y; j < y + h; j++) {
-            for (int i = x; i < x + w; i++) {
-                _set_pixel(i, j, fillColor.r, fillColor.g, fillColor.b);
-            }
-        }
+// Draw a quadrilateral
+void quad(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4) {
+    if (useFill && !useStroke) {
+        triangle(x1, y1, x2, y2, x3, y3);
+        triangle(x1, y1, x3, y3, x4, y4);
     }
+    if (useStroke && !useFill) {
+        line(x1, y1, x2, y2);
+        line(x2, y2, x3, y3);
+        line(x3, y3, x4, y4);
+        line(x4, y4, x1, y1);
+    }
+    if (useFill && useStroke) {
+        // Fill the quad using triangles
 
-    // Draw the outline if stroke is enabled
-    if (useStroke) {
-        line(x, y, x + w - 1, y);         // Top
-        line(x + w - 1, y, x + w - 1, y + h - 1); // Right
-        line(x + w - 1, y + h - 1, x, y + h - 1); // Bottom
-        line(x, y + h - 1, x, y);         // Left
+        useStroke = 0; // Temporarily disable stroke for filling
+        triangle(x1, y1, x2, y2, x3, y3);
+        triangle(x1, y1, x3, y3, x4, y4);
+        useStroke = 1; // Re-enable stroke
+
+        // Draw the outline
+        line(x1, y1, x2, y2);
+        line(x2, y2, x3, y3);
+        line(x3, y3, x4, y4);
+        line(x4, y4, x1, y1);
     }
 }
 
-// Draw a square
+// Daw a rectangle using the quad function
+void rect(int x, int y, int w, int h) {
+    // Rectangle as a quad: top-left, top-right, bottom-right, bottom-left
+    quad(x, y, x + w - 1, y, x + w - 1, y + h - 1, x, y + h - 1);
+}
+
 void square(int x, int y, int size) {
     rect(x, y, size, size);
 }
@@ -423,18 +436,18 @@ void arcMode(int x, int y, int w, int h, float start, float stop, int mode) {
 
 // Helper function to sort three points by y-coordinate
 static void _sort_points_by_y(int* x1, int* y1, int* x2, int* y2, int* x3, int* y3) {
-    // Sort the points by y-coordinate (bubble sort)
-    if (*y1 > *y2) {
+    // Sort the points by y-coordinate, and use x-coordinate as a tiebreaker
+    if (*y1 > *y2 || (*y1 == *y2 && *x1 > *x2)) {
         int temp_x = *x1, temp_y = *y1;
         *x1 = *x2; *y1 = *y2;
         *x2 = temp_x; *y2 = temp_y;
     }
-    if (*y2 > *y3) {
+    if (*y2 > *y3 || (*y2 == *y3 && *x2 > *x3)) {
         int temp_x = *x2, temp_y = *y2;
         *x2 = *x3; *y2 = *y3;
         *x3 = temp_x; *y3 = temp_y;
     }
-    if (*y1 > *y2) {
+    if (*y1 > *y2 || (*y1 == *y2 && *x1 > *x2)) {
         int temp_x = *x1, temp_y = *y1;
         *x1 = *x2; *y1 = *y2;
         *x2 = temp_x; *y2 = temp_y;
@@ -476,15 +489,15 @@ void triangle(int x1, int y1, int x2, int y2, int x3, int y3) {
             // Fill flat top triangle
             float slope1 = (float)(x3 - x1) / (y3 - y1);
             float slope2 = (float)(x3 - x2) / (y3 - y2);
-            float x_start = x3;
-            float x_end = x3;
+            float x_start = x1;
+            float x_end = x2;
 
-            for (int y = y3; y >= y1; y--) {
+            for (int y = y1; y <= y3; y++) {
                 for (int x = (int)x_start; x <= (int)x_end; x++) {
                     _set_pixel(x, y, fillColor.r, fillColor.g, fillColor.b);
                 }
-                x_start -= slope1;
-                x_end -= slope2;
+                x_start += slope1;
+                x_end += slope2;
             }
         }
         // Handle general triangle - split into flat bottom and flat top
@@ -510,15 +523,15 @@ void triangle(int x1, int y1, int x2, int y2, int x3, int y3) {
             // Fill flat top triangle (v2, v4, v3)
             slope1 = (float)(x3 - x2) / (y3 - y2);
             slope2 = (float)(x3 - x4) / (y3 - y4);
-            x_start = x3;
-            x_end = x3;
+            x_start = x2;
+            x_end = x4;
 
-            for (int y = y3; y > y2; y--) {
+            for (int y = y2 + 1; y <= y3; y++) {
                 for (int x = (int)x_start; x <= (int)x_end; x++) {
                     _set_pixel(x, y, fillColor.r, fillColor.g, fillColor.b);
                 }
-                x_start -= slope1;
-                x_end -= slope2;
+                x_start += slope1;
+                x_end += slope2;
             }
         }
     }

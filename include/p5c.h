@@ -62,6 +62,7 @@ int run(void);
 // Drawing functions
 void point(int x, int y);
 void line(int x1, int y1, int x2, int y2);
+void quad(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4);
 void rect(int x, int y, int w, int h);
 void square(int x, int y, int size);
 void ellipse(int x, int y, int w, int h);
